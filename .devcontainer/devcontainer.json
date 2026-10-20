@@ -1,0 +1,12 @@
+{
+  "name": "Linear Regression with MLflow",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "forwardPorts": [5000],
+  "portsAttributes": {
+    "5000": {
+      "label": "MLflow Tracking UI",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "python -m pip install -r requirements.txt"
+}
