@@ -178,12 +178,12 @@ def main() -> None:
 	)
 	metrics["loo_rmse_mean"] = float(-loo["test_rmse"].mean())
 	metrics["loo_mae_mean"] = float(-loo["test_mae"].mean())
-	for split, estimator in enumerate(loo["estimator"], start=1):
-		coefficient_rows.extend(coefficient_records(estimator, "loo", split))
-	coefficient_frame = pd.DataFrame(coefficient_rows)
-	coefficient_metrics, coefficient_summaries = coefficient_summary(
-		coefficient_frame
-	)
+	#for split, estimator in enumerate(loo["estimator"], start=1):
+	#	coefficient_rows.extend(coefficient_records(estimator, "loo", split))
+	#coefficient_frame = pd.DataFrame(coefficient_rows)
+	#coefficient_metrics, coefficient_summaries = coefficient_summary(
+	#	coefficient_frame
+	#)
 	metrics.update(coefficient_metrics)
 
 	code_info = provenance()
