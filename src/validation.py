@@ -178,13 +178,13 @@ def main() -> None:
 	)
 	metrics["loo_rmse_mean"] = float(-loo["test_rmse"].mean())
 	metrics["loo_mae_mean"] = float(-loo["test_mae"].mean())
-	#for split, estimator in enumerate(loo["estimator"], start=1):
-	#	coefficient_rows.extend(coefficient_records(estimator, "loo", split))
-	#coefficient_frame = pd.DataFrame(coefficient_rows)
-	#coefficient_metrics, coefficient_summaries = coefficient_summary(
-	#	coefficient_frame
-	#)
-	#metrics.update(coefficient_metrics)
+	for split, estimator in enumerate(loo["estimator"], start=1):
+		coefficient_rows.extend(coefficient_records(estimator, "loo", split))
+	coefficient_frame = pd.DataFrame(coefficient_rows)
+	coefficient_metrics, coefficient_summaries = coefficient_summary(
+		coefficient_frame
+	)
+	metrics.update(coefficient_metrics)
 
 	code_info = provenance()
 	mlflow.set_experiment("tips-multivariable-linear-regression")
@@ -215,7 +215,7 @@ def main() -> None:
 			{**code_info, "dataset": "seaborn.tips", "dataset_sha256": data_hash},
 			"provenance.json",
 		)
-		#mlflow.log_dict(coefficient_summaries, "coefficient_stability.json")
+		mlflow.log_dict(coefficient_summaries, "coefficient_stability.json")
 
 		# Refit on all rows for the tracked model artifact after validation.
 		final_model = build_pipeline().fit(X, y)
