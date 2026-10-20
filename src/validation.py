@@ -215,7 +215,7 @@ def main() -> None:
 			{**code_info, "dataset": "seaborn.tips", "dataset_sha256": data_hash},
 			"provenance.json",
 		)
-		mlflow.log_dict(coefficient_summaries, "coefficient_stability.json")
+		#mlflow.log_dict(coefficient_summaries, "coefficient_stability.json")
 
 		# Refit on all rows for the tracked model artifact after validation.
 		final_model = build_pipeline().fit(X, y)
