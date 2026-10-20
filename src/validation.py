@@ -184,7 +184,7 @@ def main() -> None:
 	#coefficient_metrics, coefficient_summaries = coefficient_summary(
 	#	coefficient_frame
 	#)
-	metrics.update(coefficient_metrics)
+	#metrics.update(coefficient_metrics)
 
 	code_info = provenance()
 	mlflow.set_experiment("tips-multivariable-linear-regression")
