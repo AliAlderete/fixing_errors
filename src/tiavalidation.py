@@ -25,6 +25,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 
 RANDOM_STATE = 42
+BOOTSTRAP_RESAMPLES = 100
 TARGET = "tip"
 NUMERIC_FEATURES = ["total_bill", "size"]
 CATEGORICAL_FEATURES = ["sex", "smoker", "day", "time"]
@@ -180,6 +181,10 @@ def main() -> None:
 	metrics["loo_mae_mean"] = float(-loo["test_mae"].mean())
 	for split, estimator in enumerate(loo["estimator"], start=1):
 		coefficient_rows.extend(coefficient_records(estimator, "loo", split))
+	bootstrap_metrics, bootstrap_coefficients = bootstrap_validation(X, y)
+	metrics.update(bootstrap_metrics)
+	coefficient_rows.extend(bootstrap_coefficients)
+
 	coefficient_frame = pd.DataFrame(coefficient_rows)
 	coefficient_metrics, coefficient_summaries = coefficient_summary(
 		coefficient_frame
@@ -199,7 +204,8 @@ def main() -> None:
 				"holdout_test_size": 0.2,
 				"random_state": RANDOM_STATE,
 				"kfold_splits": 5,
-				"validation_methods": "holdout,kfold,loo",
+				"bootstrap_resamples": BOOTSTRAP_RESAMPLES,
+				"validation_methods": "holdout,kfold,loo,bootstrap",
 				"dataset_rows": len(tips),
 			}
 		)
@@ -244,6 +250,35 @@ def main() -> None:
 			mlflow.log_artifact(str(plot_path))
 		print(json.dumps({"run_id": run.info.run_id, "metrics": metrics}, indent=2))
 
+#adding bootsrap validation function to evaluate model 
+def bootstrap_validation(X: pd.DataFrame, y: pd.Series) -> tuple[dict, list]:
+	"""Evaluate bootstrap models on out-of-bag rows and collect coefficients."""
+	rng = np.random.default_rng(RANDOM_STATE)
+	metric_values = {"r2": [], "rmse": [], "mae": []}
+	coefficient_rows = []
+	row_count = len(X)
+
+	for split in range(1, BOOTSTRAP_RESAMPLES + 1):
+		sample_indices = rng.integers(0, row_count, size=row_count)
+		in_bag = np.zeros(row_count, dtype=bool)
+		in_bag[sample_indices] = True
+		oob_indices = np.flatnonzero(~in_bag)
+
+		model = build_pipeline().fit(X.iloc[sample_indices], y.iloc[sample_indices])
+		metrics = regression_metrics(
+			y.iloc[oob_indices], model.predict(X.iloc[oob_indices])
+		)
+		for name, value in metrics.items():
+			metric_values[name].append(value)
+		coefficient_rows.extend(coefficient_records(model, "bootstrap", split))
+
+	bootstrap_metrics = {}
+	for name, values in metric_values.items():
+		bootstrap_metrics[f"bootstrap_{name}_mean"] = float(np.mean(values))
+		bootstrap_metrics[f"bootstrap_{name}_std"] = float(np.std(values))
+	return bootstrap_metrics, coefficient_rows
+
 
 if __name__ == "__main__":
 	main()
+
